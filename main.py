@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 120 + node_index * (sleep_seconds / node_count)
+        start_epoch = input_epoch + 400 + node_index * (sleep_seconds / node_count)
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
             raise Exception("given start time has already elapsed!")
