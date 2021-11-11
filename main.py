@@ -12,15 +12,18 @@ LAST_COIN = None
 def run_process(parser, webscraper):
     global LAST_COIN
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
+    print(f"make GET request to Binance at epoch {int(round(time.time() * 1000, 0))}ms")
     announcement = webscraper.get_latest_annoucement()
     coin = parser.find_coin(announcement)
-    print(f"coin={coin}")
+    coin = "BCH" # REMOVE THIS
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
         response = requests.post(url, data=coin_bytes)
         LAST_COIN = coin
         if response.status_code != 200:
             raise Exception("exception trying to POST to nexus server")
+        else:
+            print(f"successfully posted coin={coin} to nexus server")
 
 def extract_epoch(param):
     m = re.search("^epoch=([0-9]*)$", param)
