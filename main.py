@@ -79,6 +79,7 @@ def send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subj
         raise
 
 if __name__ == "__main__":
+    print("main")
     input_epoch = None
     sleep_seconds = 60
     node_index = None
@@ -110,8 +111,7 @@ if __name__ == "__main__":
         i = 0
 
         while True:
-            with open("bar.txt", "a+") as f:
-                f.write(str(loop_exec_time_epoch) + "\n")
+            print(loop_exec_time_epoch)
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
