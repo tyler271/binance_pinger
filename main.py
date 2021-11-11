@@ -121,8 +121,8 @@ if __name__ == "__main__":
         send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subject, body)
 
         while True:
-            print(f"loop_exec_time_epoch={loop_exec_time_epoch}")
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
+            print(f"loop_exec_time_epoch={loop_exec_time_epoch}")
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
             i += 1
