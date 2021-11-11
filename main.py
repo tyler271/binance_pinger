@@ -15,10 +15,12 @@ def run_process(parser, webscraper):
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
     print(f"make GET request to Binance at epoch {int(round(time.time() * 1000, 0))}ms")
     announcement = webscraper.get_latest_annoucement()
+    print(f"parse coin from announcement {int(round(time.time() * 1000, 0))}ms")
     coin = parser.find_coin(announcement)
     coin = "BCH" # REMOVE THIS
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
+        print(f"make POST request to nexus server at epoch {int(round(time.time() * 1000, 0))}ms")
         response = requests.post(url, data=coin_bytes)
         LAST_COIN = coin
         if response.status_code != 200:
@@ -108,7 +110,7 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 120 + node_index * (sleep_seconds / node_count)
+        start_epoch = input_epoch + 180 + node_index * (sleep_seconds / node_count)
         print(f"start_epoch={start_epoch}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
