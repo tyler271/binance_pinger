@@ -110,6 +110,8 @@ if __name__ == "__main__":
         i = 0
 
         while True:
+            with open("bar.txt", "a+") as f:
+                f.write(str(loop_exec_time_epoch) + "\n")
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
