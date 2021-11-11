@@ -19,8 +19,8 @@ def run_process(parser, webscraper):
         if response.status_code != 200:
             raise Exception("exception trying to POST to nexus server")
 
-def extract_exec_time_epoch(param):
-    m = re.search("^start=([0-9]*)$", param)
+def extract_epoch(param):
+    m = re.search("^epoch=([0-9]*)$", param)
     if m is not None:
         return int(m.group(1))
     else:
@@ -28,6 +28,20 @@ def extract_exec_time_epoch(param):
 
 def extract_sleep_sec(param):
     m = re.search("^sleep_sec=([0-9]*)$", param)
+    if m is not None:
+        return int(m.group(1))
+    else:
+        return None
+
+def extract_node_index(param):
+    m = re.search("^node_index=([0-9]*)$", param)
+    if m is not None:
+        return int(m.group(1))
+    else:
+        return None
+
+def extract_node_count(param):
+    m = re.search("^node_count=([0-9]*)$", param)
     if m is not None:
         return int(m.group(1))
     else:
@@ -63,28 +77,38 @@ def send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subj
         raise
 
 if __name__ == "__main__":
-    exec_time_epoch = None
+    input_epoch = None
     sleep_seconds = 60
+    node_index = None
+    node_count = None
     if len(sys.argv) > 1:
         for param in sys.argv[1:]:
-            if extract_exec_time_epoch(param) is not None:
-                exec_time_epoch = extract_exec_time_epoch(param)
+            if extract_epoch(param) is not None:
+                input_epoch = extract_epoch(param)
             elif extract_sleep_sec(param) is not None:
                 sleep_seconds = extract_sleep_sec(param)
+            elif extract_node_index(param) is not None
+                node_index = extract_node_index(param)
+            elif extract_node_count(param) is not None
+                node_count = extract_node_count(param)
+
+    if (input_epoch is None) or (node_index is None) or (node_count is None):
+        raise Exception("missing required argument!")
+
     parser = AnnoucementParser()
     webscraper = BinanceWebscraper()
 
     try:
         # Main loop
+        start_epoch = input_epoch + 60 + node_index * (sleep_seconds / node_count)
         scheduler = sched.scheduler(time.time, time.sleep);
-        if exec_time_epoch is None:
-            exec_time_epoch = time.time() + 2
-        elif exec_time_epoch < time.time() + 2:
+        if start_epoch < time.time() + 2:
             raise Exception("given start time has already elapsed!")
         priority = 1
         i = 0
+
         while True:
-            loop_exec_time_epoch = exec_time_epoch + i * sleep_seconds
+            loop_exec_time_epoch = start_epoch + i * sleep_seconds
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
             i += 1
