@@ -8,13 +8,13 @@ import time
 LAST_COIN = None
 
 def run_process(parser, webscraper):
+    global LAST_COIN
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
     announcement = webscraper.get_latest_annoucement()
     coin = parser.find_coin(announcement)
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
         response = requests.post(url, data=coin_bytes)
-        global LAST_COIN
         LAST_COIN = coin
         if response.status_code != 200:
             raise Exception("exception trying to POST to nexus server")
@@ -87,9 +87,9 @@ if __name__ == "__main__":
                 input_epoch = extract_epoch(param)
             elif extract_sleep_sec(param) is not None:
                 sleep_seconds = extract_sleep_sec(param)
-            elif extract_node_index(param) is not None
+            elif extract_node_index(param) is not None:
                 node_index = extract_node_index(param)
-            elif extract_node_count(param) is not None
+            elif extract_node_count(param) is not None:
                 node_count = extract_node_count(param)
 
     if (input_epoch is None) or (node_index is None) or (node_count is None):
