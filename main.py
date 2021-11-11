@@ -2,6 +2,7 @@ from announcement_parser import AnnoucementParser
 from binance_webscraper import BinanceWebscraper
 import os
 import re
+import requests
 import sched
 import smtplib
 import sys
@@ -107,7 +108,7 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 400 + node_index * (sleep_seconds / node_count)
+        start_epoch = input_epoch + 120 + node_index * (sleep_seconds / node_count)
         print(f"start_epoch={start_epoch}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
