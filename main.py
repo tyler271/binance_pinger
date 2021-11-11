@@ -14,6 +14,7 @@ def run_process(parser, webscraper):
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
     announcement = webscraper.get_latest_annoucement()
     coin = parser.find_coin(announcement)
+    print(f"coin={coin}")
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
         response = requests.post(url, data=coin_bytes)
@@ -79,7 +80,7 @@ def send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subj
         raise
 
 if __name__ == "__main__":
-    print("main")
+    print("@main")
     input_epoch = None
     sleep_seconds = 60
     node_index = None
@@ -104,14 +105,23 @@ if __name__ == "__main__":
     try:
         # Main loop
         start_epoch = input_epoch + 400 + node_index * (sleep_seconds / node_count)
+        print(f"start_epoch={start_epoch}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
             raise Exception("given start time has already elapsed!")
         priority = 1
         i = 0
 
+        sender_gmail_addr = os.environ["NOTIFICATION_EMAIL_SENDER_ADDR"]
+        sender_gmail_pass = os.environ["NOTIFICATION_EMAIL_SENDER_PASS"]
+        receiver = os.environ["NOTIFICATION_EMAIL_RECEIVER_ADDR"]
+        node_id = os.environ["NODE_ID"]
+        subject = f"PROCESS START SUCCESSFULL ON NODE {node_id}"
+        body = "hello world"
+        send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subject, body)
+
         while True:
-            print(loop_exec_time_epoch)
+            print(f"loop_exec_time_epoch={loop_exec_time_epoch}")
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
