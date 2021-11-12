@@ -14,7 +14,19 @@ def run_process(parser, webscraper):
     global LAST_COIN
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
     print(f"GET Binance at {int(round(time.time() * 1000, 0))}ms")
-    announcement = webscraper.get_latest_annoucement()
+    binance_success_flag = False
+    i = 0
+    while (not binance_success_flag) and (i < 3):
+        try:
+            announcement = webscraper.get_latest_annoucement()
+            binance_success_flag = True
+        except:
+            time.sleep(1)
+            i += 1
+
+    if not binance_success_flag:
+        raise Exception("binance GET request failed 3 times!")
+
     coin = parser.find_coin(announcement)
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
