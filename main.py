@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 1500 + node_index * (sleep_seconds / node_count)
+        start_epoch = input_epoch + 150 + node_index * (sleep_seconds / node_count)
         print(f"start_epoch={start_epoch}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
