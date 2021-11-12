@@ -13,14 +13,14 @@ LAST_COIN = None
 def run_process(parser, webscraper):
     global LAST_COIN
     url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
-    print(f"make GET request to Binance at epoch {int(round(time.time() * 1000, 0))}ms")
+    print(f"GET Binance at {int(round(time.time() * 1000, 0))}ms")
     announcement = webscraper.get_latest_annoucement()
     coin = parser.find_coin(announcement)
-    coin = "BCH" # REMOVE THIS
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
-        print(f"make POST request to nexus server at epoch {int(round(time.time() * 1000, 0))}ms")
+        post_time = time.time()
         response = requests.post(url, data=coin_bytes)
+        print(f"made POST request to nexus server at epoch {int(round(post_time * 1000, 0))}ms")
         LAST_COIN = coin
         if response.status_code != 200:
             raise Exception("exception trying to POST to nexus server")
@@ -87,7 +87,7 @@ def send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subj
 if __name__ == "__main__":
     print("@main")
     input_epoch = None
-    sleep_seconds = 60
+    sleep_seconds = 10
     node_index = None
     node_count = None
     if len(sys.argv) > 1:
@@ -109,8 +109,8 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 150 + node_index * (sleep_seconds / node_count)
-        print(f"start_epoch={start_epoch}")
+        start_epoch = input_epoch + 1500 + node_index * (sleep_seconds / node_count)
+        print(f"start_epoch={start_epoch}, sleep_seconds={sleep_seconds}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
             raise Exception("given start time has already elapsed!")
@@ -127,7 +127,6 @@ if __name__ == "__main__":
 
         while True:
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
-            print(f"loop_exec_time_epoch={loop_exec_time_epoch}")
             scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
             scheduler.run()
             i += 1
