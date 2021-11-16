@@ -1,6 +1,7 @@
 from announcement_parser import AnnoucementParser
 import http.client as httplib
 import json
+import math
 import os
 import re
 import requests
@@ -201,7 +202,7 @@ if __name__ == "__main__":
                 j += 1
 
             if not binance_success_flag:
-                raise
+                raise Exception("outer 3 failures")
 
             i += 1
 
