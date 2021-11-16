@@ -62,6 +62,13 @@ def extract_sleep_sec(param):
     else:
         return None
 
+def extract_start_time_delay(param):
+    m = re.search("^start_time_delay=([0-9]*)$", param)
+    if m is not None:
+        return int(m.group(1))
+    else:
+        return None
+
 def extract_conn_close_interval(param):
     m = re.search("^conn_close_interval=([0-9]*)$", param)
     if m is not None:
@@ -122,6 +129,7 @@ def calc_stddev(X):
 if __name__ == "__main__":
     print("@main")
     input_epoch = None
+    start_time_delay = None
     sleep_seconds = 10
     conn_close_interval = 30
     node_index = None
@@ -130,6 +138,8 @@ if __name__ == "__main__":
         for param in sys.argv[1:]:
             if extract_epoch(param) is not None:
                 input_epoch = extract_epoch(param)
+            elif extract_start_time_delay(param) is not None:
+                start_time_delay = extract_start_time_delay(param)
             elif extract_sleep_sec(param) is not None:
                 sleep_seconds = extract_sleep_sec(param)
             elif extract_conn_close_interval(param) is not None:
@@ -146,7 +156,7 @@ if __name__ == "__main__":
 
     try:
         # Main loop
-        start_epoch = input_epoch + 1500 + node_index * (sleep_seconds / node_count)
+        start_epoch = input_epoch + start_time_delay + node_index * (sleep_seconds / node_count)
         print(f"start_epoch={start_epoch}, sleep_seconds={sleep_seconds}")
         scheduler = sched.scheduler(time.time, time.sleep);
         if start_epoch < time.time() + 2:
