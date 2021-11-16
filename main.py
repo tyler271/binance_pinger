@@ -1,5 +1,5 @@
 from announcement_parser import AnnoucementParser
-from binance_webscraper import BinanceWebscraper
+import http.client as httplib
 import os
 import re
 import requests
@@ -10,17 +10,20 @@ import time
 
 LAST_COIN = None
 
-def run_process(parser, webscraper):
+def run_process(parser, conn):
     global LAST_COIN
-    url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
     print(f"GET Binance at {int(round(time.time() * 1000, 0))}ms")
     binance_success_flag = False
     i = 0
     while (not binance_success_flag) and (i < 3):
         try:
-            announcement = webscraper.get_latest_annoucement()
+            announcement_url = "/bapi/composite/v1/public/cms/article/catalog/list/query?catalogId=48&pageNo=1&pageSize=1"
+            conn.request("GET", url)
+            response = conn.getresponse()
+            announcement = json.loads(response.read().decode("utf-8"))["data"]["articles"][0]["title"]
             binance_success_flag = True
-        except:
+        except Exception as e:
+            print(f"Exception \"{str(e)}\" encountered at {int(round(time.time() * 1000, 0))}ms")
             time.sleep(1)
             i += 1
 
@@ -30,14 +33,16 @@ def run_process(parser, webscraper):
     coin = parser.find_coin(announcement)
     if coin is not None and coin != LAST_COIN:
         coin_bytes = coin.encode("utf-8")
+        nexus_url = os.environ["NEXUS_SERVER_URL"] + "/report_coin"
         post_time = time.time()
-        response = requests.post(url, data=coin_bytes)
+        response = requests.post(nexus_url, data=coin_bytes)
         print(f"made POST request to nexus server at epoch {int(round(post_time * 1000, 0))}ms")
         LAST_COIN = coin
         if response.status_code != 200:
             raise Exception("exception trying to POST to nexus server")
         else:
             print(f"successfully posted coin={coin} to nexus server")
+    print(f"announcement={announcement}")
 
 def extract_epoch(param):
     m = re.search("^epoch=([0-9]*)$", param)
@@ -48,6 +53,13 @@ def extract_epoch(param):
 
 def extract_sleep_sec(param):
     m = re.search("^sleep_sec=([0-9]*)$", param)
+    if m is not None:
+        return int(m.group(1))
+    else:
+        return None
+
+def extract_sleep_sec(param):
+    m = re.search("^conn_close_interval=([0-9]*)$", param)
     if m is not None:
         return int(m.group(1))
     else:
@@ -100,6 +112,7 @@ if __name__ == "__main__":
     print("@main")
     input_epoch = None
     sleep_seconds = 10
+    conn_close_interval = 30
     node_index = None
     node_count = None
     if len(sys.argv) > 1:
@@ -108,6 +121,8 @@ if __name__ == "__main__":
                 input_epoch = extract_epoch(param)
             elif extract_sleep_sec(param) is not None:
                 sleep_seconds = extract_sleep_sec(param)
+            elif extract_conn_close_interval(param) is not None:
+                conn_close_interval = extract_conn_close_interval(param)
             elif extract_node_index(param) is not None:
                 node_index = extract_node_index(param)
             elif extract_node_count(param) is not None:
@@ -117,7 +132,6 @@ if __name__ == "__main__":
         raise Exception("missing required argument!")
 
     parser = AnnoucementParser()
-    webscraper = BinanceWebscraper()
 
     try:
         # Main loop
@@ -136,10 +150,17 @@ if __name__ == "__main__":
         subject = f"PROCESS START SUCCESSFULL ON NODE {node_id}"
         body = "hello world"
         send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subject, body)
-
+        conn = None
         while True:
+            if i % conn_close_interval == 0:
+                if conn is not None:
+                    conn.close()
+                host = "www.binance.com"
+                conn = httplib.HTTPSConnection(host)
+                conn.connect()
+
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
-            scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, webscraper))
+            scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, conn))
             scheduler.run()
             i += 1
 
