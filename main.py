@@ -18,7 +18,7 @@ def run_process(parser, conn):
     while (not binance_success_flag) and (i < 3):
         try:
             announcement_url = "/bapi/composite/v1/public/cms/article/catalog/list/query?catalogId=48&pageNo=1&pageSize=1"
-            conn.request("GET", url)
+            conn.request("GET", announcement_url)
             response = conn.getresponse()
             announcement = json.loads(response.read().decode("utf-8"))["data"]["articles"][0]["title"]
             binance_success_flag = True
