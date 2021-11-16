@@ -58,7 +58,7 @@ def extract_sleep_sec(param):
     else:
         return None
 
-def extract_sleep_sec(param):
+def extract_conn_close_interval(param):
     m = re.search("^conn_close_interval=([0-9]*)$", param)
     if m is not None:
         return int(m.group(1))
