@@ -11,7 +11,7 @@ import time
 
 LAST_COIN = None
 
-def run_process(parser, conn):
+def run_process(parser, conn, time_arr):
     global LAST_COIN
     print(f"GET Binance at {int(round(time.time() * 1000, 0))}ms")
     binance_success_flag = False
@@ -19,8 +19,11 @@ def run_process(parser, conn):
     while (not binance_success_flag) and (i < 3):
         try:
             announcement_url = "/bapi/composite/v1/public/cms/article/catalog/list/query?catalogId=48&pageNo=1&pageSize=1"
+            t0 = time.time()
             conn.request("GET", announcement_url)
             response = conn.getresponse()
+            t1 = time.time()
+            time_arr.append(1000 * (t1 - t0))
             announcement = json.loads(response.read().decode("utf-8"))["data"]["articles"][0]["title"]
             binance_success_flag = True
         except Exception as e:
@@ -109,6 +112,13 @@ def send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subj
     if not success_flag:
         raise
 
+def calc_avg(X):
+    return sum(X) / len(X)
+
+def calc_stddev(X):
+    X_bar = calc_avg(X)
+    return math.sqrt(sum([(x - X_bar)**2 for x in X]) / (len(X) - 1))
+
 if __name__ == "__main__":
     print("@main")
     input_epoch = None
@@ -152,17 +162,37 @@ if __name__ == "__main__":
         body = "hello world"
         send_email_with_retries(sender_gmail_addr, sender_gmail_pass, receiver, subject, body)
         conn = None
+        time_arr = []
         while True:
             if i % conn_close_interval == 0:
                 if conn is not None:
                     conn.close()
+                    X_bar = calc_avg(time_arr)
+                    S = calc_stddev(time_arr)
+                    print(f"N={len(time_arr)}, X_bar={X_bar:.1f}ms, S={S:.1f}ms")
+                    time_arr = []
                 host = "www.binance.com"
                 conn = httplib.HTTPSConnection(host)
                 conn.connect()
 
             loop_exec_time_epoch = start_epoch + i * sleep_seconds
-            scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, conn))
-            scheduler.run()
+            scheduler.enterabs(loop_exec_time_epoch, priority, run_process, argument=(parser, conn, time_arr))
+
+            binance_success_flag = False
+            j = 0
+            while (not binance_success_flag) and (j < 3):
+                try:
+                    scheduler.run()
+                    binance_success_flag = True
+                except:
+                    conn.close()
+                    conn = httplib.HTTPSConnection(host)
+                    conn.connect()
+                j += 1
+
+            if not binance_success_flag:
+                raise
+
             i += 1
 
     except Exception as e:
