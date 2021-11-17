@@ -93,7 +93,7 @@ def extract_node_count(param):
 
 def send_email(sender_gmail_addr, sender_gmail_pass, receiver, subject, body):
     receiver_list = [receiver]
-    message = f"""From: From MyCryptoBot <{sender_gmail_addr}>
+    message = f"""From: MyCryptoBot <{sender_gmail_addr}>
 To: To Person <{receiver_list[0]}>
 Subject: {subject}
 
